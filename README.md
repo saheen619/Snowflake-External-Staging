@@ -14,8 +14,8 @@ The following steps describe how to create and use an external stage in Snowflak
 2) Create an IAM role in AWS that grants Snowflake access to the S3 bucket. The IAM role should have a trust policy that allows Snowflake to assume the role, and a permission policy that allows the role to read and write to the S3 bucket.    
 
 3) Create an external stage in Snowflake that references the S3 bucket and the IAM role. You can use the CREATE STAGE command to create the external stage. You need to specify the URL of the S3 bucket, the prefix of the data files, and the ARN of the IAM role.
+   
 For example:
-
 ```
 CREATE STAGE my_external_stage
 URL = 's3://my-s3-bucket/my-prefix'
@@ -23,14 +23,18 @@ CREDENTIALS = (AWS_ROLE = 'arn:aws:iam::123456789012:role/my-iam-role');
 ```
 
 4) Use the external stage to load data from S3 into Snowflake tables. You can use the COPY INTO command or the Snowpipe feature to load data from the external stage into Snowflake tables. You need to specify the name of the external stage, the name of the target table, and any additional options for file format, error handling, etc.    
+    
 For example:
-
 ```
 COPY INTO my_table
   FROM @my_external_stage
   FILE_FORMAT = (TYPE = CSV)
   ON_ERROR = CONTINUE;
 ```
+Now, you will be able to see the objects in the S3 bucket here in the staged area under your schema as shown below:   
+![StagedFilesInSnowflake](https://github.com/saheen619/External-Staging-in-Snowflake/blob/main/Snips/Externally%20Staged%20Content%20from%20S3%20in%20Snowflake.JPG?raw=true)
+
+
 Monitor and manage the external stage and its files. You can use various commands and functions in Snowflake to view and modify the properties of the external stage, list and delete its files, refresh its metadata, etc. For example:
 
 -- Show properties of an external stage   
