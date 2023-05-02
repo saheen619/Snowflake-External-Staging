@@ -11,21 +11,79 @@ The following steps describe how to create and use an external stage in Snowflak
     
 1) Create an AWS S3 bucket and upload the data files that you want to use in Snowflake. The data files can be in various formats, such as CSV, JSON, Parquet, etc. Make sure that the S3 bucket and the data files have the appropriate permissions and encryption settings for Snowflake to access them.   
 
-2) Create an IAM role in AWS that grants Snowflake access to the S3 bucket. The IAM role should have a trust policy that allows Snowflake to assume the role, and a permission policy that allows the role to read and write to the S3 bucket.    
+2) Create an IAM role in AWS that grants Snowflake access to the S3 bucket. The IAM role should have a trust policy that allows Snowflake to assume the role, and a permission policy that allows the role to read and write to the S3 bucket.        
+    
+    a) Creating a policy:
+    ```JSON
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "VisualEditor0",
+                "Effect": "Allow",
+                "Action": "s3:ListBucket",
+                "Resource": "arn:aws:s3:::snowflake-stage-bucket",
+                "Condition": {
+                    "StringLike": {
+                        "s3:prefix": "Consumer Complaints/*"
+                    }
+                }
+            },
+            {
+                "Sid": "VisualEditor1",
+                "Effect": "Allow",
+                "Action": [
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObject",
+                    "s3:GetObjectVersion"
+                ],
+                "Resource": "arn:aws:s3:::snowflake-stage-bucket/Consumer Complaints/*"
+            },
+            {
+                "Sid": "VisualEditor2",
+                "Effect": "Allow",
+                "Action": "s3:GetBucketLocation",
+                "Resource": "arn:aws:s3:::snowflake-stage-bucket"
+            }
+        ]
+    }
+    ```   
+    b) The trust relationships has to be altered as below:   
+    ```JSON
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "AWS": "*****<AWS ARN>***********"
+                },
+                "Action": "sts:AssumeRole",
+                "Condition": {
+                    "StringEquals": {
+                        "sts:ExternalId": "*****<EXTERNAL ID>*********"
+                    }
+                }
+            }
+        ]
+    }
+    ```
 
 3) Create an external stage in Snowflake that references the S3 bucket and the IAM role. You can use the CREATE STAGE command to create the external stage. You need to specify the URL of the S3 bucket, the prefix of the data files, and the ARN of the IAM role.
    
 For example:
-```
+```SQL
 CREATE STAGE my_external_stage
 URL = 's3://my-s3-bucket/my-prefix'
 CREDENTIALS = (AWS_ROLE = 'arn:aws:iam::123456789012:role/my-iam-role');
 ```
 
 4) Use the external stage to load data from S3 into Snowflake tables. You can use the COPY INTO command or the Snowpipe feature to load data from the external stage into Snowflake tables. You need to specify the name of the external stage, the name of the target table, and any additional options for file format, error handling, etc.    
-    
+
 For example:
-```
+```SQL
 COPY INTO my_table
   FROM @my_external_stage
   FILE_FORMAT = (TYPE = CSV)
@@ -38,16 +96,23 @@ Now, you will be able to see the objects in the S3 bucket here in the staged are
 Monitor and manage the external stage and its files. You can use various commands and functions in Snowflake to view and modify the properties of the external stage, list and delete its files, refresh its metadata, etc. For example:
 
 -- Show properties of an external stage   
-```DESC STAGE my_external_stage;```
+```SQL
+DESC STAGE my_external_stage;
+```
 
 -- List files in an external stage   
-```LIST @my_external_stage;```
+```SQL
+LIST @my_external_stage;
+```
 
 -- Delete files in an external stage   
-```REMOVE @my_external_stage/pattern*;```
-
+```SQL
+REMOVE @my_external_stage/pattern*;
+```
 -- Refresh metadata of an external stage   
-```ALTER STAGE my_external_stage REFRESH;```
+```SQL
+ALTER STAGE my_external_stage REFRESH;
+```
 ## Tech Used
 
 SNOWFLAKE - Snowsight   
