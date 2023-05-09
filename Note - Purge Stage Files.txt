@@ -3,10 +3,12 @@ Keeping data in stages will contribute to the storage costs in Snowflake.
 The recommended practice here in staging is to remove or purge the stage or the data in the stage after the data has been copied into the table.
 
 
--- For continuous data updation, without mentioning file names, on running the COPY INTO command, the new records will be parsed and then the file will be deleted from the stage.
+// For continuous data updation, without mentioning file names, on running the COPY INTO command, the new records will be parsed and then the file will be deleted from the stage.
 
 
 COPY INTO SAHEEN_DB.PUBLIC.CONSUMER_COMPLAINTS
 FROM  @SAHEEN_DB.PUBLIC.s3_stage_consumer_complaints
 FILE_FORMAT = (FORMAT_NAME='csv')
 PURGE = TRUE;						-- Which essentially remove the staged files, for which the data has already been updated.
+
+// Mandatorily use them in all COPY INTO commands while using stage to load data.
